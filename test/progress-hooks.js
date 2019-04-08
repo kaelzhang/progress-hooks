@@ -15,7 +15,8 @@ const {
 const run = async t => {
   const hooks = new Hooks({
     accelerate: new SyncHook(['newSpeed']),
-    brake: new AsyncParallelHook()
+    brake: new AsyncParallelHook(),
+    stop: new AsyncParallelHook()
   })
 
   let speed = 0
@@ -34,8 +35,27 @@ const run = async t => {
     }, 20)
   })
 
+  hooks.brake.tapPromise('BrakePlugin', () => new Promise(resolve => {
+    setTimeout(() => {
+      speed -= 30
+      resolve()
+    }, 10)
+  }))
+
+  hooks.stop.tapPromise('ParkPlugin', () => new Promise(resolve => {
+    setTimeout(() => {
+      speed = 0
+      resolve()
+    })
+  }))
+
   // Should not fail
   await hooks.brake.promise()
+  await new Promise(resolve => {
+    hooks.brake.callAsync(resolve)
+  })
+
+  t.throws(() => hooks.stop.call(), 'stop.call is not a function')
 
   hooks.accelerate.call(120)
 
@@ -43,10 +63,14 @@ const run = async t => {
 
   await new Promise(resolve => {
     hooks.brake.callAsync(() => {
-      t.is(speed, 100)
       resolve()
     })
   })
+
+  t.is(speed, 70)
+
+  await hooks.stop.promise()
+  t.is(speed, 0)
 }
 
 test('contructor: no argument', t => {
@@ -70,6 +94,9 @@ test('clean', t => {
   hooks.brake.tap('BoomPlugin', () => {
     throw new Error('boooooooooooooom')
   })
+
+  // should not run
+  hooks.brake.call()
 
   hooks[CLEAN]()
 

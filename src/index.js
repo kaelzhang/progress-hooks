@@ -10,7 +10,8 @@ const PRIVATE_CLEAN = symbol('clean')
 const PRIVATE_ENABLE = symbol('enable')
 
 class Holder {
-  constructor (hook, afterCalled) {
+  constructor (name, hook, afterCalled) {
+    this._name = name
     this._hook = hook
     this._enabled = false
     this._directives = []
@@ -47,12 +48,12 @@ class Holder {
   }
 
   call (...args) {
-    if (!this._enabled) {
-      return
-    }
-
     // new AsyncParallelHook().call
     if (!this._hook.call) {
+      throw new TypeError(`${this._name}.call is not a function`)
+    }
+
+    if (!this._enabled) {
       return
     }
 
@@ -61,11 +62,12 @@ class Holder {
   }
 
   callAsync (...args) {
+    const callback = args.pop()
+
     if (!this._enabled) {
+      callback()
       return
     }
-
-    const callback = args.pop()
 
     this._hook.promise(...args)
     .then(
@@ -126,7 +128,7 @@ class Hooks {
   [ADD] (name, hook) {
     this._hooks.push(name)
 
-    this[name] = new Holder(hook, () => {
+    this[name] = new Holder(name, hook, () => {
       this._next()
     })
 

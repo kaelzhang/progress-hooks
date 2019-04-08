@@ -17,7 +17,7 @@
 
 The manager of sequential hooks to work with [`tapable`](https://www.npmjs.com/package/tapable).
 
-`progress-hooks` will apply the taps only if the previous hook has been called.
+`progress-hooks` applies the taps(plugins) only if the previous hook has been called.
 
 Usually, it used to replace the code slice `this.hooks = {}` of the `tapable` example
 
@@ -34,10 +34,21 @@ const {
   SyncHook,
   AsyncParallelHook
 } = require('tapable')
-const {Hooks} = require('progress-hooks')
+const {
+  Hooks,
+  ADD,
+  CLEAN
+} = require('progress-hooks')
 
 class Car {
   constructor () {
+    // this.hooks = {
+    //   accelerate: new SyncHook(['newSpeed']),
+    //   brake: new SyncHook()
+    // }
+
+    // Instead of the code above, we create hooks by `new Hooks()`
+
     this.hooks = new Hooks({
       accelerate: new SyncHook(['newSpeed']),
       brake: new SyncHook()
@@ -58,7 +69,7 @@ car.hooks.brake.tap('LoggerPlugin', () => {
   console.log('brake')
 })
 
-// And it will not called
+// And it will not be called
 car.hooks.brake.call()
 
 car.hooks.accelerate.tap('SetterPlugin', newSpeed => {
@@ -72,6 +83,20 @@ car.hook.accelerate.call(120)
 car.hooks.brake.call()
 // it print: 'brake'
 ```
+
+### hooks[ADD](name, hook)
+
+Adds a new hook.
+
+```js
+const hooks = new Hooks()
+
+hooks[ADD]('accelerate', new SyncHook(['newSpeed']))
+```
+
+### hooks[CLEAN]()
+
+Cleans hook taps if the hook is not enabled, so that we could reload plugins.
 
 ## License
 
