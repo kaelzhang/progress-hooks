@@ -15,7 +15,11 @@
 
 # progress-hooks
 
-<!-- description -->
+The manager of sequential hooks to work with [`tapable`](https://www.npmjs.com/package/tapable).
+
+`progress-hooks` will apply the taps only if the previous hook has been called.
+
+Usually, it used to replace the code slice `this.hooks = {}` of the `tapable` example
 
 ## Install
 
@@ -26,7 +30,47 @@ $ npm i progress-hooks
 ## Usage
 
 ```js
-import progress_hooks from 'progress-hooks'
+const {
+  SyncHook,
+  AsyncParallelHook
+} = require('tapable')
+const {Hooks} = require('progress-hooks')
+
+class Car {
+  constructor () {
+    this.hooks = new Hooks({
+      accelerate: new SyncHook(['newSpeed']),
+      brake: new SyncHook()
+    })
+  }
+}
+
+const car = new Car()
+let speed = 0
+
+// The `LoggerPlugin` method is not actually tapped into the `car.hooks.brake`,
+// but instead, it is held by `progress-hooks`
+car.hooks.brake.tap('LoggerPlugin', () => {
+  if (speed === 0) {
+    throw new Error('can not brake')
+  }
+
+  console.log('brake')
+})
+
+// And it will not called
+car.hooks.brake.call()
+
+car.hooks.accelerate.tap('SetterPlugin', newSpeed => {
+  speed = newSpeed
+})
+
+car.hook.accelerate.call(120)
+// And after `car.hook.accelerate.call()` is invoked,
+// The `LoggerPlugin` will be applied
+
+car.hooks.brake.call()
+// it print: 'brake'
 ```
 
 ## License

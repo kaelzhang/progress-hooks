@@ -1,7 +1,7 @@
 {
   "name": "progress-hooks",
   "version": "1.0.0",
-  "description": "progress-hooks",
+  "description": "The manager of sequential hooks to work with tapable. `progress-hooks` will apply the taps only if the previous hook has been called",
   "main": "src/index.js",
   "scripts": {
     "test": "nyc ava --timeout=10s",
@@ -17,7 +17,9 @@
     "url": "git://github.com/kaelzhang/progress-hooks.git"
   },
   "keywords": [
-    "progress-hooks"
+    "progress-hooks",
+    "tapable",
+    "plugin"
   ],
   "engines": {
     "node": ">= 6"
@@ -37,5 +39,8 @@
     "eslint-config-ostai": "^1.1.0",
     "eslint-plugin-import": "^2.13.0",
     "eslint": "^5.14.0"
+  },
+  "dependencies": {
+    "tapable": "^1.1.1"
   }
 }
