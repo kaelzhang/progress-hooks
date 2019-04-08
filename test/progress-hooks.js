@@ -104,4 +104,27 @@ test('clean', t => {
   hooks.brake.call()
 
   t.is(speed, 120)
+
+  // Has been disabled, should not fails
+  hooks.brake.tap('BoomPlugin', () => {
+    throw new Error('boooooooooooooom')
+  })
+
+  hooks.brake.call()
+})
+
+test('disabledAfterCalled = false', t => {
+  const hooks = new Hooks({
+    accelerate: new SyncHook()
+  }, {
+    disableAfterCalled: false
+  })
+
+  hooks.accelerate.call()
+
+  hooks.accelerate.tap('BoomPlugin', () => {
+    throw new Error('Booooooooooom!!')
+  })
+
+  t.throws(() => hooks.accelerate.call())
 })

@@ -84,6 +84,14 @@ car.hooks.brake.call()
 // it print: 'brake'
 ```
 
+## new Hooks(rawHooks, options)
+
+- **rawHooks** `{[string]: tapable.Hook}`
+- **options?** `Object`
+  - **disableAfterCalled?** `boolean=true` If `true`(the default value) the hook will be disabled after called.
+
+Returns `hooks`
+
 ### `hooks[ADD](name, hook)`
 
 Adds a new hook.

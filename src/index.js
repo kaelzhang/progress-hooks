@@ -8,6 +8,7 @@ const CLEAN = symbolFor('clean')
 
 const PRIVATE_CLEAN = symbol('clean')
 const PRIVATE_ENABLE = symbol('enable')
+const PRIVATE_DISABLE = symbol('disable')
 
 class Holder {
   constructor (name, hook, afterCalled) {
@@ -97,12 +98,19 @@ class Holder {
     })
     this[PRIVATE_CLEAN]()
   }
+
+  [PRIVATE_DISABLE] () {
+    this._enabled = false
+  }
 }
 
 class Hooks {
-  constructor (hooks = {}) {
+  constructor (hooks = {}, {
+    disableAfterCalled = true
+  } = {}) {
     this._current = - 1
     this._drained = true
+    this._disableAfterCalled = disableAfterCalled
     this._hooks = []
 
     Object.keys(hooks).forEach(name => {
@@ -128,9 +136,16 @@ class Hooks {
   [ADD] (name, hook) {
     this._hooks.push(name)
 
-    this[name] = new Holder(name, hook, () => {
+    let holder = new Holder(name, hook, () => {
+      if (this._disableAfterCalled) {
+        holder[PRIVATE_DISABLE]()
+      }
+
       this._next()
+      holder = null
     })
+
+    this[name] = holder
 
     if (this._drained) {
       this._next()
