@@ -84,7 +84,7 @@ car.hooks.brake.call()
 // it print: 'brake'
 ```
 
-### hooks[ADD](name, hook)
+### `hooks[ADD](name, hook)`
 
 Adds a new hook.
 
@@ -94,7 +94,7 @@ const hooks = new Hooks()
 hooks[ADD]('accelerate', new SyncHook(['newSpeed']))
 ```
 
-### hooks[CLEAN]()
+### `hooks[CLEAN]()`
 
 Cleans hook taps if the hook is not enabled, so that we could reload plugins.
 
