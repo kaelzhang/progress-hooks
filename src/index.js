@@ -23,6 +23,10 @@ class Holder {
     this._directives.length = 0
   }
 
+  get hook () {
+    return this._hook
+  }
+
   _apply (type, ...args) {
     return this._hook[type](...args)
   }
@@ -104,60 +108,73 @@ class Holder {
   }
 }
 
+const define = (host, key, value) => Object.defineProperty(host, key, {
+  value,
+  writable: true
+})
+
 class Hooks {
   constructor (hooks = {}, {
     disableAfterCalled = true
   } = {}) {
-    this._current = - 1
-    this._drained = true
-    this._disableAfterCalled = disableAfterCalled
-    this._hooks = []
+    define(this, '_current', -1)
+    define(this, '_drained', true)
+    define(this, '_disableAfterCalled', disableAfterCalled)
+    define(this, '_hooks', [])
 
     Object.keys(hooks).forEach(name => {
       this[ADD](name, hooks[name])
     })
   }
+}
 
-  _next () {
-    const next = this._current + 1
-    const has = next in this._hooks
+Object.defineProperties(Hooks.prototype, {
+  _next: {
+    value () {
+      const next = this._current + 1
+      const has = next in this._hooks
 
-    if (has) {
-      this._drained = false
-      this._current ++
-      const name = this._hooks[next]
-      this[name][PRIVATE_ENABLE]()
-      return
-    }
-
-    this._drained = true
-  }
-
-  [ADD] (name, hook) {
-    this._hooks.push(name)
-
-    let holder = new Holder(name, hook, () => {
-      if (this._disableAfterCalled) {
-        holder[PRIVATE_DISABLE]()
+      if (has) {
+        this._drained = false
+        this._current ++
+        const name = this._hooks[next]
+        this[name][PRIVATE_ENABLE]()
+        return
       }
 
-      this._next()
-      holder = null
-    })
+      this._drained = true
+    }
+  },
 
-    this[name] = holder
+  [ADD]: {
+    value (name, hook) {
+      this._hooks.push(name)
 
-    if (this._drained) {
-      this._next()
+      let holder = new Holder(name, hook, () => {
+        if (this._disableAfterCalled) {
+          holder[PRIVATE_DISABLE]()
+        }
+
+        this._next()
+        holder = null
+      })
+
+      this[name] = holder
+
+      if (this._drained) {
+        this._next()
+      }
+    }
+  },
+
+  [CLEAN]: {
+    value () {
+      this._hooks.forEach(name => {
+        this[name][PRIVATE_CLEAN]()
+      })
     }
   }
-
-  [CLEAN] () {
-    this._hooks.forEach(name => {
-      this[name][PRIVATE_CLEAN]()
-    })
-  }
-}
+})
 
 module.exports = {
   Hooks,

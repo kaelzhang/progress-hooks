@@ -92,6 +92,19 @@ car.hooks.brake.call()
 
 Returns `hooks`
 
+The returned `hooks` is a relatively clean object that we can get all hook names just with `Object.keys(hooks)`:
+
+```js
+Object.keys(car.hooks)
+// ['accelerate', 'brake']
+```
+
+And we can access the real tapable hook by access:
+
+```js
+car.hooks.accelerate.hook  // -> The tapable hook
+```
+
 ### `hooks[ADD](name, hook)`
 
 Adds a new hook.

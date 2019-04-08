@@ -128,3 +128,15 @@ test('disabledAfterCalled = false', t => {
 
   t.throws(() => hooks.accelerate.call())
 })
+
+test('Object.keys, and getter', t => {
+  const hook = new SyncHook()
+  const hooks = new Hooks({
+    a: hook,
+    b: new SyncHook(),
+    c: new SyncHook()
+  })
+
+  t.deepEqual(Object.keys(hooks), ['a', 'b', 'c'])
+  t.is(hooks.a.hook, hook)
+})
