@@ -1,3 +1,5 @@
+const once = require('once')
+
 const symbolFor = s => Symbol.for(`progress-hooks:${s}`)
 const symbol = s => Symbol(`progress-hooks:${s}`)
 
@@ -8,11 +10,11 @@ const PRIVATE_CLEAN = symbol('clean')
 const PRIVATE_ENABLE = symbol('enable')
 
 class Holder {
-  constructor (hook, onEnable) {
+  constructor (hook, afterCalled) {
     this._hook = hook
     this._enabled = false
     this._directives = []
-    this._onEnable = onEnable
+    this._afterCalled = once(afterCalled)
   }
 
   [PRIVATE_CLEAN] () {
@@ -20,7 +22,7 @@ class Holder {
   }
 
   _apply (type, ...args) {
-    this._hook[type](...args)
+    return this._hook[type](...args)
   }
 
   _tap (type, options, fn) {
@@ -30,12 +32,6 @@ class Holder {
     }
 
     this._directives.push([type, options, fn])
-  }
-
-  _call (type, ...args) {
-    if (this._enabled) {
-      this._apply(type, ...args)
-    }
   }
 
   tap (options, fn) {
@@ -51,28 +47,53 @@ class Holder {
   }
 
   call (...args) {
-    this._call('call', ...args)
-  }
-
-  callAsync (...args) {
-    this._call('callAsync', ...args)
-  }
-
-  promise (...args) {
-    this._call('promise', ...args)
-  }
-
-  [PRIVATE_ENABLE] () {
-    if (this._enabled) {
+    if (!this._enabled) {
       return
     }
 
-    this._enabled = false
+    // new AsyncParallelHook().call
+    if (!this._hook.call) {
+      return
+    }
+
+    this._hook.call(...args)
+    this._afterCalled()
+  }
+
+  callAsync (...args) {
+    if (!this._enabled) {
+      return
+    }
+
+    const callback = args.pop()
+
+    this._hook.promise(...args)
+    .then(
+      () => {
+        callback()
+        this._afterCalled()
+      },
+      callback
+    )
+  }
+
+  promise (...args) {
+    if (!this._enabled) {
+      return Promise.resolve()
+    }
+
+    return this._hook.promise(...args)
+    .then(() => {
+      this._afterCalled()
+    })
+  }
+
+  [PRIVATE_ENABLE] () {
+    this._enabled = true
     this._directives.forEach(args => {
       this._apply(...args)
     })
     this[PRIVATE_CLEAN]()
-    this._onEnable()
   }
 }
 
@@ -104,6 +125,7 @@ class Hooks {
 
   [ADD] (name, hook) {
     this._hooks.push(name)
+
     this[name] = new Holder(hook, () => {
       this._next()
     })

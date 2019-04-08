@@ -4,7 +4,7 @@
   "description": "The manager of sequential hooks to work with tapable. `progress-hooks` will apply the taps only if the previous hook has been called",
   "main": "src/index.js",
   "scripts": {
-    "test": "nyc ava --timeout=10s",
+    "test": "nyc ava --timeout=10s --verbose",
     "test-no-report": "NODE_DEBUG=progress-hooks nyc ava --timeout=10s --verbose",
     "lint": "eslint .",
     "posttest": "nyc report --reporter=text-lcov > coverage.lcov && codecov"
@@ -41,6 +41,7 @@
     "eslint": "^5.14.0"
   },
   "dependencies": {
+    "once": "^1.4.0",
     "tapable": "^1.1.1"
   }
 }
