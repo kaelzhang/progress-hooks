@@ -77,6 +77,38 @@ test('contructor: no argument', t => {
   t.notThrows(() => new Hooks())
 })
 
+test('error: no object', t => {
+  t.throws(() => new Hooks({
+    a: null
+  }), 'hook must be an object')
+})
+
+test('error: hook.hook no object', t => {
+  t.throws(() => new Hooks({
+    a: {
+      hook: 'a'
+    }
+  }), 'hook must be an object')
+})
+
+test('error: no number', t => {
+  t.throws(() => new Hooks({
+    a: {
+      plan: '2',
+      hook: new SyncHook()
+    }
+  }), 'plan must be a number')
+})
+
+test('error: plan less than 1', t => {
+  t.throws(() => new Hooks({
+    a: {
+      plan: 0,
+      hook: new SyncHook()
+    }
+  }), 'plan should not less than 1')
+})
+
 test('complex normal', run)
 
 test('clean', t => {
@@ -139,4 +171,26 @@ test('Object.keys, and getter', t => {
 
   t.deepEqual(Object.keys(hooks), ['a', 'b', 'c'])
   t.is(hooks.a.hook, hook)
+})
+
+test('plan', async t => {
+  const hooks = new Hooks({
+    b: {
+      hook: new SyncHook(),
+      plan: 2
+    },
+    c: new SyncHook()
+  })
+
+  const message = 'Booooooooom!!'
+
+  hooks.c.tap('BoomPlugin', () => {
+    throw new Error(message)
+  })
+
+  t.notThrows(() => hooks.c.call())
+  hooks.b.call()
+  t.notThrows(() => hooks.c.call())
+  hooks.b.call()
+  t.throws(() => hooks.c.call(), message)
 })

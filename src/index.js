@@ -10,13 +10,25 @@ const PRIVATE_CLEAN = symbol('clean')
 const PRIVATE_ENABLE = symbol('enable')
 const PRIVATE_DISABLE = symbol('disable')
 
+const hasOwnProperty = Function.call.bind(Object.prototype.hasOwnProperty)
+
 class Holder {
-  constructor (name, hook, afterCalled) {
+  constructor (name, hook, plan, afterCalled) {
     this._name = name
     this._hook = hook
     this._enabled = false
     this._directives = []
-    this._afterCalled = once(afterCalled)
+    this._plan = plan
+
+    const called = once(afterCalled)
+
+    this._afterCalled = plan === 1
+      ? called
+      : () => {
+        if (-- plan < 1) {
+          called()
+        }
+      }
   }
 
   [PRIVATE_CLEAN] () {
@@ -117,7 +129,7 @@ class Hooks {
   constructor (hooks = {}, {
     disableAfterCalled = true
   } = {}) {
-    define(this, '_current', -1)
+    define(this, '_current', - 1)
     define(this, '_drained', true)
     define(this, '_disableAfterCalled', disableAfterCalled)
     define(this, '_hooks', [])
@@ -147,10 +159,39 @@ Object.defineProperties(Hooks.prototype, {
   },
 
   [ADD]: {
-    value (name, hook) {
+    value (name, hookConfig) {
+      if (Object(hookConfig) !== hookConfig) {
+        throw new TypeError('hook must be an object')
+      }
+
+      let hook
+      let plan
+
+      if (hasOwnProperty(hookConfig, 'hook')) {
+        ({
+          hook,
+          plan = 1
+        } = hookConfig)
+      } else {
+        hook = hookConfig
+        plan = 1
+      }
+
+      if (Object(hook) !== hook) {
+        throw new TypeError('hook must be an object')
+      }
+
+      if (typeof plan !== 'number') {
+        throw new TypeError('plan must be a number')
+      }
+
+      if (plan < 1) {
+        throw new RangeError('plan should not less than 1')
+      }
+
       this._hooks.push(name)
 
-      let holder = new Holder(name, hook, () => {
+      let holder = new Holder(name, hook, plan, () => {
         if (this._disableAfterCalled) {
           holder[PRIVATE_DISABLE]()
         }

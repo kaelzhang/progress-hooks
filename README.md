@@ -51,7 +51,12 @@ class Car {
 
     this.hooks = new Hooks({
       accelerate: new SyncHook(['newSpeed']),
-      brake: new SyncHook()
+      brake: {
+        hook: new SyncHook(),
+        // The car need to brake twice, then stop
+        plan: 2
+      },
+      stop: new SyncHook()
     })
   }
 }
@@ -69,6 +74,10 @@ car.hooks.brake.tap('LoggerPlugin', () => {
   console.log('brake')
 })
 
+car.hooks.stop.tap('StopEnginePlugin', () => {
+  console.log('stopped')
+})
+
 // And it will not be called
 car.hooks.brake.call()
 
@@ -81,14 +90,30 @@ car.hook.accelerate.call(120)
 // The `LoggerPlugin` will be applied
 
 car.hooks.brake.call()
-// it print: 'brake'
+// prints: 'brake'
+
+car.hooks.stop.call()
+// nothing `console.log`ged, because of `plan: 2`
+
+car.hooks.brake.call()
+car.hooks.stop.call()
+// prints: stopped
 ```
 
 ## new Hooks(rawHooks, options)
 
-- **rawHooks** `{[string]: tapable.Hook}`
+- **rawHooks** `{[string]: tapable.Hook | PlannedHook}`
 - **options?** `Object`
   - **disableAfterCalled?** `boolean=true` If `true`(the default value) the hook will be disabled after called.
+
+```ts
+interface PlannedHook {
+  hook: tapable.Hook
+  // If plan is `2`, then the next hook will not be activated
+  // until the current hook has been called twice
+  plan: number
+}
+```
 
 Returns `hooks`
 
