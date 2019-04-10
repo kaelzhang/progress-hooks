@@ -1,6 +1,6 @@
 {
   "name": "progress-hooks",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "The manager of sequential hooks to work with tapable. `progress-hooks` will apply the taps only if the previous hook has been called",
   "main": "src/index.js",
   "scripts": {
@@ -41,6 +41,7 @@
     "eslint": "^5.14.0"
   },
   "dependencies": {
+    "delegates": "^1.0.0",
     "once": "^1.4.0",
     "tapable": "^1.1.1"
   }

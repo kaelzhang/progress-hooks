@@ -19,10 +19,16 @@ const run = async t => {
     stop: new AsyncParallelHook()
   })
 
+  t.is(hooks.accelerate.isUsed(), false)
+  t.is(hooks.brake.isUsed(), false)
+  t.is(hooks.stop.isUsed(), false)
+
   let speed = 0
   hooks.accelerate.tap('GasPlugin', newSpeed => {
     speed = newSpeed
   })
+
+  t.is(hooks.accelerate.isUsed(), true)
 
   hooks.brake.tapAsync('BrakePlugin', callback => {
     if (speed === 0) {
@@ -49,6 +55,9 @@ const run = async t => {
     })
   }))
 
+  t.is(hooks.brake.isUsed(), false)
+  t.is(hooks.stop.isUsed(), false)
+
   // Should not fail
   await hooks.brake.promise()
   await new Promise(resolve => {
@@ -58,6 +67,7 @@ const run = async t => {
   t.throws(() => hooks.stop.call(), 'stop.call is not a function')
 
   hooks.accelerate.call(120)
+  t.is(hooks.brake.isUsed(), true)
 
   t.is(speed, 120)
 
@@ -68,6 +78,8 @@ const run = async t => {
   })
 
   t.is(speed, 70)
+
+  t.is(hooks.stop.isUsed(), true)
 
   await hooks.stop.promise()
   t.is(speed, 0)
@@ -170,7 +182,6 @@ test('Object.keys, and getter', t => {
   })
 
   t.deepEqual(Object.keys(hooks), ['a', 'b', 'c'])
-  t.is(hooks.a.hook, hook)
 })
 
 test('plan', async t => {

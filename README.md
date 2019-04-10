@@ -37,7 +37,8 @@ const {
 const {
   Hooks,
   ADD,
-  CLEAN
+  CLEAN,
+  COUNT
 } = require('progress-hooks')
 
 class Car {
@@ -130,7 +131,7 @@ And we can access the real tapable hook by access:
 car.hooks.accelerate.hook  // -> The tapable hook
 ```
 
-### `hooks[ADD](name, hook)`
+### `hooks[ADD](name, hook): void`
 
 Adds a new hook.
 
@@ -140,7 +141,7 @@ const hooks = new Hooks()
 hooks[ADD]('accelerate', new SyncHook(['newSpeed']))
 ```
 
-### `hooks[CLEAN]()`
+### `hooks[CLEAN](): void`
 
 Cleans hook taps if the hook is not enabled, so that we could reload plugins.
 

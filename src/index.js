@@ -1,4 +1,5 @@
 const once = require('once')
+const delegates = require('delegates')
 
 const symbolFor = s => Symbol.for(`progress-hooks:${s}`)
 const symbol = s => Symbol(`progress-hooks:${s}`)
@@ -33,10 +34,6 @@ class Holder {
 
   [PRIVATE_CLEAN] () {
     this._directives.length = 0
-  }
-
-  get hook () {
-    return this._hook
   }
 
   _apply (type, ...args) {
@@ -119,6 +116,10 @@ class Holder {
     this._enabled = false
   }
 }
+
+delegates(Holder.prototype, '_hook')
+.method('isUsed')
+.method('intercept')
 
 const define = (host, key, value) => Object.defineProperty(host, key, {
   value,
