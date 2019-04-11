@@ -54,7 +54,7 @@ class Car {
       accelerate: new SyncHook(['newSpeed']),
       brake: {
         hook: new SyncHook(),
-        // The car need to brake twice, then stop
+        // The car needs to brake twice, then stop
         plan: 2
       },
       stop: new SyncHook()
@@ -125,11 +125,13 @@ Object.keys(car.hooks)
 // ['accelerate', 'brake']
 ```
 
+<!--
 And we can access the real tapable hook by access:
 
 ```js
 car.hooks.accelerate.hook  // -> The tapable hook
 ```
+-->
 
 ### `hooks[ADD](name, hook): void`
 
